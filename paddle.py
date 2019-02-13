@@ -4,7 +4,7 @@ import keyboard
 class Paddle:
 	def __init__(self, window, cen_x, cen_y, speed, isl):
 		self.window = window
-		self.width = 15			#PAddle width
+		self.width = 15			#Paddle width
 		self.height = 50		#Paddle Height
 		self.cen_x = cen_x		#position x (center)
 		self.cen_y = cen_y		#position y (center)
@@ -33,6 +33,10 @@ class Paddle:
 
 	
 	#updates position one tick in time based off of keyboard inputs and bot_input
+	#if bot_input is "none", the update based off of keyboard input
+	#elif bot input is "up", move paddle up
+	#elif bot input is "down", move paddle down
+	#elif bot input is "wait" (or anything really,) then don't move the paddle
 	def update(self, bot_input):
 		if bot_input is "none":
 			if self.isl:

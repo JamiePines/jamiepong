@@ -11,11 +11,11 @@ class Game:
 		self.window_height = window_height
 		self.window_width = window_width
 		self.paddle_speed = paddle_speed
-		self.p_dist_from_edge = p_dist_from_edge
+		self.p_dist_from_edge = p_dist_from_edge #How far the paddles are from the left/right edges of the screen
 		self.ball_radius = ball_radius
-		self.ball_speedup = ball_speedup
-		self.ball_paddle_speed_ratio = 1.5
-		self.botmode = True
+		self.ball_speedup = ball_speedup #ball speed multiplier each time a paddle contacts the ball
+		self.ball_paddle_speed_ratio = 1.5 #initial ball speed relative to paddle speed
+		self.botmode = True					#is a bot controlling the left paddle
 
 		#create the window, ball, and paddles
 		self.win = GraphWin("Jamie Pong", self.window_width, self.window_height)
@@ -26,11 +26,6 @@ class Game:
 
 		self.pongbot = PongBot(self.win, window_height, window_width, paddle_speed, p_dist_from_edge, ball_radius, \
 			self.ball_speedup, self.lpaddle, self.rpaddle, self.ball)
-		#Target display code
-		# self.pongbot = PongBot(self.win, window_height, window_width, paddle_speed, p_dist_from_edge, ball_radius, self.lpaddle, self.rpaddle, self.ball)
-		# self.targetx, self.targety = self.pongbot.calculate_trajectory(self.ball.vx, self.ball.vy, self.ball.cen_x, self.ball.cen_y)
-		# self.target = Circle(Point(self.targetx, self.targety), 5)
-		# self.target.draw(self.win)
 
 	def update(self):
 		self.ball.update()
@@ -41,12 +36,6 @@ class Game:
 			direction = 'none'
 		self.lpaddle.update(direction)
 		self.rpaddle.update("none")
-
-		#more target display code
-		# self.target.undraw()
-		# self.targetx, self.targety = self.pongbot.calculate_trajectory(self.ball.vx, self.ball.vy, self.ball.cen_x, self.ball.cen_y)
-		# self.target = Circle(Point(self.targetx, self.targety), 5)
-		# self.target.draw(self.win)
 
 		#if game is over, reset
 		if self.ball.left() > self.window_width or self.ball.right() < 0:

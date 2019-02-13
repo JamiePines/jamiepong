@@ -1,4 +1,6 @@
-#Assumes the pong arena is a decent bit wider than it is tall
+#The AI assumes it is possible to hit the ball to any part of the right side of the screen.
+#If you make the window dimentions less wide relative to height, the ai will start dodging the ball
+
 from paddle import Paddle
 from pongball import PongBall
 from graphics import *
@@ -15,9 +17,9 @@ class PongBot:
 		self.lpaddle = lpaddle
 		self.rpaddle = rpaddle
 		self.ball = ball
-		self.oldvy = self.ball.vy
-		self.oldvx = self.ball.vx
-		self.oldleftball = self.ball.left()
+		self.oldvy = self.ball.vy #balls y velocity in the previous frame
+		self.oldvx = self.ball.vx #balls x velocity in the previous frame
+		self.oldleftball = self.ball.left() #position of left side of ball in previous frame
 		self.target = self.calc_target()
 
 	def update(self):
@@ -31,9 +33,8 @@ class PongBot:
 			or self.oldvx < 0 and self.ball.vx > 0 \
 			or self.oldvy == -self.ball.vy \
 			or self.ball.left() <= x_pos_to_commit and self.oldleftball > x_pos_to_commit:
-			#At the moment right paddle hits the ball
-			self.target = self.calc_target()
 
+			self.target = self.calc_target()
 
 		self.oldvy = self.ball.vy
 		self.oldvx = self.ball.vx
@@ -53,6 +54,7 @@ class PongBot:
 			return "down"
 
 	def calculate_trajectory(self, vx, vy, x0, y0):
+		#Calculates the y position that the ball will be at when it reaches the left side of the screen
 		ymax = self.window_height - self.ball_radius 	#lowest ball can go before being reflected
 		ymin = self.ball_radius							#highest ball can go before being reflected
 		paddle_x = self.lpaddle.right() 				#x position of left paddle
@@ -61,10 +63,10 @@ class PongBot:
 			x_at_yismax = vx/vy * (ymax-y0) + x0 		#x when y = ymax
 		y_at_paddle_x = vy/vx * (paddle_x - x0) + y0 	#y when x is paddle_x
 
-		#ball bounces at top of screen
+		#if ball bounces at top of screen, recurse with a reflected y velocity, at the predicted position of bounce
 		if vy != 0 and x_at_yismin > paddle_x and x_at_yismin < x0:
 			return self.calculate_trajectory(vx, -vy, x_at_yismin, ymin)
-		#ball bounces off of bottom of screen
+		#if ball bounces off of bottom of screen, recurse with a reflected y velocity, at the predicted position of bounce
 		elif vy != 0 and x_at_yismax > paddle_x and x_at_yismax < x0:
 			return self.calculate_trajectory(vx, -vy, x_at_yismax, ymax)
 		else:
@@ -90,22 +92,31 @@ class PongBot:
 
 	def x_pos_to_commit(self):
 		#waits until you have time to move one paddle's length to commit to an option
+		#returns the xposition
 		time = self.lpaddle.height / self.paddle_speed
 		dist = time * abs(self.ball.vx)
 		xpos = self.lpaddle.right() + dist
 		return xpos
 
 	def calc_target(self):
-		#If ball is moving away, target is center, else, its where the ball will land.
+		#If ball is moving away from left: 
+			#target is center, 
+		#If ball is moving towards left: 
+			#If the ball hasn't reached to xpos to commit: 
+				#target is where ball is predicted to land
+			#if ball has passed xpos to commit: 
+				#target is at the selected offset to aim the ball into selected corner
+
 		if self.ball.vx > 0:
 			return self.window_height / 2
 		else:
+			ball_predicted_landing_spot = self.calculate_trajectory(self.ball.vx, self.ball.vy, self.ball.cen_x, self.ball.cen_y)[1]
 			if self.ball.left() >= self.x_pos_to_commit():
-				return self.calculate_trajectory(self.ball.vx, self.ball.vy, self.ball.cen_x, self.ball.cen_y)[1]
+				return ball_predicted_landing_spot
 			else:
 				if self.rpaddle.cen_y > self.window_height / 2: 
 					#if right paddle is in the lower half of screen, aim for top corner
-					return self.calculate_trajectory(self.ball.vx, self.ball.vy, self.ball.cen_x, self.ball.cen_y)[1] + self.offset_for_traj_min(self.lpaddle.cen_y)
+					return ball_predicted_landing_spot + self.offset_for_traj_min(self.lpaddle.cen_y)
 				else:
 					#else aim for bottom corner
-					return self.calculate_trajectory(self.ball.vx, self.ball.vy, self.ball.cen_x, self.ball.cen_y)[1] + self.offset_for_traj_max(self.lpaddle.cen_y)
+					return ball_predicted_landing_spot + self.offset_for_traj_max(self.lpaddle.cen_y)
